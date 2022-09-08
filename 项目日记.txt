@@ -1,0 +1,310 @@
+#项目准备
+    github下载项目后台api，解压缩后切换到该后台目录下
+        npm install 安装后台项目所需的依赖
+    终端运行后台 node app.js
+
+#移动端适配 --> /public/js/rem.js
+    在public中设立js文件夹，新建rem.js来实现rem布局
+    
+    rem是响应式布局的一种，是相对于根元素(即html元素)font-size计算值的倍数的一个css单位。
+    因为rem的特性相对长度单位，常被用来做移动适配，pc端页面不推荐使用rem。
+    rem布局的本质是等比缩放，一般是基于宽度针对设计稿的宽度 利用js动态获取屏幕的宽度。
+
+    通过 script引入到 /public/index.html中
+
+#字体图标的引入
+    本项目中字体图标来源于 iconfont
+    iconfont新建项目，放入需要用到的字体图标
+    项目中的字体图标将采用 symbol类型引入，首先生成CDN，并引入 /public/index.html中
+
+    <svg class="icon" aria-hidden="true">
+      <use xlink:href="#icon-xxx"></use>    此处更换 xxx即可使用字体图标
+    </svg>
+
+    安装 px to rem插件，由于本项目的默认 rem为50px，因此需要修改插件的默认设置
+    在根组件中对通配符 * 以及 icon类进行样式设置
+
+#顶部导航栏TopNav --> /components/home/TopNav.vue
+    顶部导航栏可以分为三部分：1.列表图标；2.内容；3.搜索图标
+    将该 TopNav组件引入 HomeView中进行注册
+
+#引入Vant组件 --> 用于添加移动端的轮播图等
+    https://vant-contrib.gitee.io/vant/#/zh-CN --> vant官网 
+    移动端采用vant组件库 npm i vant
+    项目最好采取按需引入，因此额外安装插件 npm i babel-plugin-import -D
+
+    babel.config.js中添加如下配置
+    plugins: [
+        ['import', {
+        libraryName: 'vant',
+        libraryDirectory: 'es',
+        style: true
+        }, 'vant']
+    ]
+
+    每当需要使用一类组件时，查阅官网文档，在main.js中进行import以及use
+
+#轮播图SwiperTop --> /components/home/SwiperTop.vue
+    由于 vant需要引入多个，我们单独设置一个 plugins目录，下面创建一个 index.js专门用于引入 
+    再将该函数引入 main.js，向函数传入 app对象，完成 import
+
+    SwiperTop.vue中完成轮播图的写入以及样式的设置
+
+#获取轮播图数据 --> /components/home/SwiperTop.vue
+    项目安装axios   cnpm install axios --save
+    运行后台项目,通过axios发送get请求,获取到轮播图的图片信息数组,并将其绑定到我们设定的轮播图上
+
+#封装axios请求 --> /request/index.js
+    新建request目录，创建index.js，内部创建axios实例，用于便捷的修改请求路径
+    在该目录下创建api目录，用于存放各个页面请求数据的 axios方法
+    将编写的home页面的axios函数引入 /components/home/SwiperTop.vue
+
+#图标组件 --> /components/home/IconList.vue
+    一个大的div包裹4个小的div，分别包裹一个字体图标和span标签
+
+#发现歌单组件 --> /components/home/MusicList.vue
+
+#发现歌单数据的获取
+    /request/api/home.js 中编写 getMusicList函数，用于获取发现歌单数据
+    将其引入 /components/home/MusicList.vue 中
+    根据接口返回的promise对象，我们需要获取其中的 name和 pic
+
+#渲染发现好歌单组件
+    返回的是一个列表形式
+    我们对其采取类似轮播图的列表渲染，通过主动操作才能进行滚动，采用自定义滑块大小
+    完成相关样式设置，以及设定数据处理方法
+
+#歌单页面的路由跳转和参数传递
+    新建 /views/ItemMusicView.vue 绑定到路由中
+    相关轮播图添加 router-link 实现路由跳转
+    router-link 以对象形式将path以及查询体参数query传入
+    query需要携带每个歌单信息中的id
+
+#获取路由参数对应的歌单数据
+    在 /views/ItemMusicView.vue中引入 useRoute 来获取query传递的id
+    新建 /request/api/item.js 用于编写歌单页面请求信息的函数方法
+    将函数引入组件中，并接受获取的歌单详情
+
+#渲染歌单详情页顶部导航 --> /components/item/ItemMusicTop.vue
+    父组件中统一接受了信息，我们在通过 props来将信息传递给 item详情页的各组件
+    新建 /components/item 组件目录
+    新建 /components/item/ItemMusicTop.vue
+    完成顶部导航栏的样式，以及背景样式
+
+#解决页面刷新数据丢失的问题 --> /views/ItemMusicView.vue
+    由于我们获取数据依赖于父组件 ItemMusicView.vue 进行props传递
+    而当我们刷新时，子组件还没能获取到数据便进行渲染，此时会报错并无法渲染页面
+    因此，我们在父组件中的子组件占位标签添加 v-if 来判断父组件是否已经发送请求并获取到了 playlist深层的creator
+    我们对 creator 进行判断即可 
+
+#完成其余item样式
+
+#歌单列表的数据获取 
+    /request/api/item.js 中写入歌单列表数据的获取方法
+    值得注意的是，歌曲列表中的收藏数来源于playlist，其余数据来源于musiclist，因此我们需要props两个数据
+    同时子组件v-if也应当为两个数据都不为空时为True
+
+#完成歌单列表样式
+
+#歌曲底部组件 --> /components/item/MusicFooter.vue
+    该组件属于一个全局组件,无论在home还是item中都需要显示
+    因此 我们在 app.vue中进行引入
+    而该组件的歌曲信息由于全局显示的需求,我们应当把歌曲播放的列表数据放在 VueX中
+
+    /store/index.js 中定义一个 playlist用于存放点击不同歌单后获取的歌曲信息数组
+    state中存放 playList -> al对象用于存放歌曲的名称和图片url;还要存放一个 id,用于audio音频播放时传入url获取对应的音频信息
+                playListIndex -> 用于上下首歌曲切换的下标索引,默认为0
+
+#实现底部组件的歌曲播放功能
+    通过给 audio标签添加ref属性,我们可以通过 this.$refs获取到audio的函数方法
+    将play赋给播放键,我们还需要在play方法激活后,设定一个全新的按键 暂停按键
+
+    我们需要判断 audio是在播放状态还是暂停状态,而该状态关系到全局的组件显示,因此我们在仓库中设置一个布尔值 isbtnShow
+    暂停图标和播放图标采用 v-show 判断布尔值来进行显示
+    并定义一个mutation用于在触发按键事件后修改布尔值
+
+    整体逻辑如下
+    methods中定义一个方法play -> 判断 audio状态是否为暂停,若为暂停,此时布尔值为true会显示播放按钮,则该play方法会触发audio的播放函数,并调用mutation将布尔值置为反值
+                                当audio状态经事件触发后修改为播放状态时,暂停按钮显示,并且play方法会触发audio的暂停函数,出发后布尔值重新被置为true
+
+#实现点击列表切换歌曲的功能
+    我们当前的仓库 playList中只有一个默认项,我们需要实现点击进入某个歌单,自动获取当前歌单的歌曲内容,并写入playList中,因此需要编写一个 mutation
+    我们希望实现,当点击歌单列表时,将歌曲信息传入,并对组件进行渲染,且在其他页面时,当前歌曲信息依然存在
+    因此 我们在 /components/item/ItemMusicList.vue 中进行数据更新到仓库
+
+    将更新数据的方法绑定到对歌单列表的点击事件上
+    这是由于,如果我们将更新绑定在home页面进入歌单时,那么当前播放的歌曲就会失去源,因此我们将该更新向后推延
+    以上完成后,我们能在切换歌单时自动将新的歌单信息渲染,并且可以成功播放
+
+    但我们在列表之中的歌曲依然无法进行切换,而我们所有的渲染包括音频源都是基于 playListIndex进行,我们需要对他进行mutation更新
+    将该mutation同样绑定到 /components/item/ItemMusicList.vue 中定义的点击事件上,获取 v-for中的index作为更新的value值传入并接收
+
+    其次我们要实现,切换歌曲后,自动进行播放
+    我们在底部组件 /components/item/MusicFooter.vue 中对 playListIndex进行监听,当改变时,触发 audio的autoplay,即自动播放,就能实现功能
+    但此时,我们的播放和暂停图标无法随之更新,还需要在监听事件中添加判断
+
+#对切换歌曲进行优化 -->
+    当我们刷新页面时，默认会获取我们设置的默认al歌曲，而此时index为默认值0，当我们切换歌单并希望播放第一首歌时，并没有办法实现自动播放  
+    这是由于我们监听的是index，而歌单第一首歌index也为0，并没有发生改变，因此我们需要对其进行修改
+
+    添加对于 playList的监听，当playList变化时，判断是否处于暂停状态，执行自动播放并修改布尔值
+
+#歌曲详情页 --> /components/item/MusicFooter.vue
+    歌曲详情页我们采用vant中提供的Popup弹出层组件来实现，效果为点击底部组件从右边弹出整个歌词详情页
+
+    首先仓库中设置一个布尔值用于判断是否显示弹出窗，并编写一个mutation用于更改该布尔值
+    Popup本身需要通过 v-model对一个布尔值进行双向绑定
+
+    将点击事件绑定给底部组件的左边部分,v-model绑定布尔值
+    弹出窗的内容我们可以通过组件引入
+
+#弹出窗-歌曲详情页的样式顶部 --> /components/item/MusicDetail.vue
+    该组件同样分为三部分,顶部,中段以及底部
+
+    顶部歌曲名称通过 marquee组件 来实现滚动
+    首先安装组件
+    npm install vue3-marquee@latest --save
+
+    只需要在 MusicDetail.vue 中局部引入即可,套入歌曲名称后,设置相关样式
+
+#弹出窗-歌曲详情页的样式中段 --> /components/item/MusicDetail.vue
+    下载网易云的图片样式,并引入中段
+    ##弹出窗口返回功能的实现
+    弹出窗的返回我们依靠修改弹出窗的布尔值进行，因此引入修改 detailShow的mutation -> updateDetailShow，并绑定到返回按钮上
+    ##弹出窗口的播放功能
+    我们要在弹出窗中同步外部的播放状态以及播放功能，则需要将 MusicFooter中的 isbtnShow以及 play方法全部传递给 MusicDetail
+
+#########UPDATE#########
+    由于接口访问经常460，故不在通过axios携带歌单的id去获取歌单数据
+    而是直接从获取的playlist中将tracks赋值给musiclist
+    并且所有歌曲播放状态都通过 isbtnShow 来进行，防止部分歌曲获取源异常导致字体图标样式错误
+
+#歌曲详情页中段的动画样式 --> /components/item/MusicDetail.vue
+    动画状态的判断依据依然是我们传入的 isbtnShow
+
+    needle采用class动态绑定 并传入对象 {类:布尔值} 当布尔值为真时会被赋予该class
+    歌曲封面写一个动画效果，并设定两个状态的class，根据isbtnShow，赋予不同的class，控制动画效果的运行与暂停
+
+#获取歌词数据  --> /request/api/item.js
+    我们还需要一个歌词页面，因此需要通过axios请求获取到歌词数据 getMusicLyric
+    同时我们需要将歌词保存，选择将其保存在VueX的仓库中
+    由于歌词需要保存在仓库，因此我们需要引入getMusicLyric并创建一个actions专门用于获取该数据 getLyric
+
+    state中创建一个对象数据 lyricList ，并创建一个可以修改它的mutation
+    将该mutation放入action中，获取后即修改
+    
+    我们依靠 MusicFooter的生命周期函数来进行歌词的获取，当渲染完成(默认歌曲)mounted或更新updated时都需要 dispatch定义的 getLyric
+    然后我们在 MusicDetail 中设定一个布尔值用于控制中段样式的变化，通过store获取到储存的歌词列表 lyricList
+
+#对歌词数据进行处理 --> /components/item/MusicDetail.vue
+    对歌词进行切割
+    运用正则进行切割成数组，并放入map遍历，将其重组为一个个对象，并返回数组，v-for列表渲染
+
+#处理歌曲播放的当前时间 --> /components/item/MusicDetail.vue
+    audio中有一个 currentTime可以让我们知晓播放器当前播放的时间
+    我们可以通过 this.$refs 在 MusicFooter中获取到
+    由于 MusicFooter连接的弹出窗组件 MusicDetail是一个全局组件，我们需要将 currentTime存储在仓库中来调用，并编写一个修改它的mutation
+    我们需要在 MusicFooter中完成currentTime的修改，并在 MusicDetail中进行调用
+
+    在MusicFooter中，由于我们的更新时间需要频繁执行，因此我们设置一个方法，里面执行一个定时器，相隔一定时间更新 currentTime
+    该函数方法在audio播放时激活并设置定时器，paused时我们需要清除掉这个定时器
+##根据自己想法改进
+    在监听playList和Index也先清除定时器再重新添加
+
+#增加歌词播放中的样式 --> /components/item/MusicDetail.vue 
+    歌词的显示牵扯到下一条歌词的出现时间，因此我们在计算属性中添加一个处理，使得每一句歌词对象中都储存自己的时间，以及下个歌词的出现时间pre
+    且如果当前歌词已为当前数组最后一项则置零
+
+    同样利用class的对象绑定方法，时间判断大于当前歌词的time 小于 pre即为true
+
+#歌词滚动
+    我们希望在歌词样式中添加滚动，并且每条激活的歌词都能处于正中
+    这就需要我们了解当前滚动条的垂直高度以及元素的相对位置
+    
+    我们在获取.active的p标签时，可以获取到它里面的offsetTop属性
+    我们可以利用 scrolltop来使得整个歌词列表进行滚动激活的p标签距离中间位置的差值，使得位置偏下的p标签得以滚动到我们想要的中间位置
+
+    *部分歌曲并不是从0分0秒开始有歌词配套，因此我们需要首先对 p是否存在进行判断，在进入位置判断
+
+#歌词页面和cd图片的显示 --> /components/item/MusicDetail.vue 
+    直接给两者加上一个点击事件 改变布尔值即可
+
+#实现上一首下一首切换 --> /components/item/MusicDetail.vue 
+    我们可以根据歌曲的index来进行切换
+    写入一个goPlay方法用于接收 +1或-1 ，并引入仓库中定义的 updatePlayListIndex 方法来实现歌曲切换
+    通过仓库中的 playListIndex来获取到当前的索引下标
+
+    对index进行判断，只有在范围中时才执行索引index的更新
+
+#添加进度条 --> /components/item/MusicDetail.vue  
+    利用input中的range来实现进度条的样式
+    我们通过 currentTime双向绑定给进度条来实现进度条的移动，max值需要我们获取到歌曲的总时长，因此需要在仓库中创建数据以及对应的修改方法mutation
+
+    在组件中定义更新duration的方法 addDuration，将获取的时长传入给mutation进行修改
+    max动态绑定duration实现每首歌曲不同的进度条总长度
+
+    我在footer组件进行渲染以及更新时都运行该函数，同时我们也要在 MusicDetail中渲染后调用该函数，来实现进度条同步
+
+#home页面搜索功能的实现 --> /components/home/TopNav.vue  
+    search搜索需要跳转到一个新的页面,因此我们新建 SearchView.vue 并在router中注册
+    给字体图标绑定点击事件,使之完成跳转功能
+
+    serach是一个简单的页面,我们直接在 SearchView.vue 中完成
+
+#搜索页面 --> /views/SearchView.vue
+    分为两个部分
+    顶部由一个字体图标以及输入框构成,下面由搜索历史构成
+    搜索历史使用一个数组接收,直接定义在当前组件中即可;
+    添加历史需要在input输入框中添加对键盘按键的 keydown.enter的监听
+
+    我们不希望数据在刷新后就被删除，因此将数组存储在sessionStorage中
+
+#删除功能 --> /views/SearchView.vue
+    首先我们对传入数组的数据进行过滤 非空,去重,并且限制数组长度
+
+    然后我们在实现删除历史记录的功能,我们需要删除sessionStorage中存储的数组,也要将变量数组置空
+
+#搜索功能的实现
+    我们需要将关键词置入相应的url中进行http请求,因此在home.js中编写axios封装
+    将封装的方法引入，并在我们绑定的enter事件中调用
+    设定一个数组变量进行接收
+
+    同时我们希望点击历史记录也能实现搜索功能，因此给历史添加点击事件，点击事件需要传入列表渲染的item并调用axios封装的查询方法
+
+#搜索列表的渲染
+    可以直接借用musiclist的渲染，修改其中参数即可
+
+#搜索列表的歌曲播放
+    我们可以直接在仓库中定义一个push方法，将当前点击的信息push进playList中
+    这样当前歌曲就处于列表的最后一位，我们直接定位到最后一位即可播放点击歌曲
+
+    由于接口返回的数据差异，我们需要对数据做出些许调整
+
+#个人中心页面的进入权限 -> /router/index.js
+    设定好个人页面的view以及路由注册
+    我们在仓库中添加一个布尔值用于判断用于是否登录
+    在router中，我们使用路由守卫进行判断
+    只有布尔值为true时我们能成功进入，否则路由守卫将页面跳转至登陆页面
+
+#登陆页面 -> /views/UserLoginView.vue
+    登陆界面我们的底部组件希望不再显示，因此在仓库中我们添加一个布尔值，再在 /router/index.js 中添加一个全局守卫用于控制布尔值
+    底部组件的显示添加 v-if绑定布尔值
+
+    在对登录请求进行axios封装编写，采用手机号的登录接口，将该axios引入仓库中，编写一个action
+    在登陆页面对数据进行双向绑定
+
+    我们对调用action，并对返回值中的code进行判断是否为200，在调用定义在仓库中的mutation修改isLogin，再页面定向到个人中心
+    错误则弹窗
+
+    同时我们要保存token作为已经登陆的证明，同样在仓库中设定state以及对应的mutation，并且mutation中应当将token保存到本地
+    在我们完成对code的验证后调用这个mutation
+
+    修改路由中的路由守卫，将判断能否跳转的条件添加 token存在与否
+
+#个人中心
+    首先添加发送请求获取用户信息的axios封装
+    获取后我们需要将数据存储到vuex中，使得个人中心页面可以获取数据以此进行渲染
+
+    用户信息在页面刷新后无法渲染，因此我们将用户信息存储到localStorage中，使用本地存储的数据进行渲染
+
+    完结
